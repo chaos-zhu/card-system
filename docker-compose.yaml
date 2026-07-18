@@ -1,5 +1,6 @@
 services:
   app:
+    container_name: card-system-app
     image: ghcr.io/chaos-zhu/card-system-app:${IMAGE_TAG:-latest}
     env_file: ${ENV_FILE:-.env}
     depends_on:
@@ -8,11 +9,11 @@ services:
       redis:
         condition: service_healthy
     volumes:
-      - app_storage:/var/www/storage
-      - app_cache:/var/www/bootstrap/cache
+      - ./data/storage:/var/www/storage
     restart: unless-stopped
 
   web:
+    container_name: card-system-web
     image: ghcr.io/chaos-zhu/card-system-web:${IMAGE_TAG:-latest}
     depends_on:
       - app
@@ -21,6 +22,7 @@ services:
     restart: unless-stopped
 
   queue:
+    container_name: card-system-queue
     image: ghcr.io/chaos-zhu/card-system-app:${IMAGE_TAG:-latest}
     env_file: ${ENV_FILE:-.env}
     command: php artisan queue:work redis --sleep=3 --tries=3 --timeout=90
@@ -30,11 +32,11 @@ services:
       redis:
         condition: service_healthy
     volumes:
-      - app_storage:/var/www/storage
-      - app_cache:/var/www/bootstrap/cache
+      - ./data/storage:/var/www/storage
     restart: unless-stopped
 
   scheduler:
+    container_name: card-system-scheduler
     image: ghcr.io/chaos-zhu/card-system-app:${IMAGE_TAG:-latest}
     env_file: ${ENV_FILE:-.env}
     command: sh -c 'while true; do php artisan schedule:run --no-interaction; sleep 60; done'
@@ -44,11 +46,11 @@ services:
       redis:
         condition: service_healthy
     volumes:
-      - app_storage:/var/www/storage
-      - app_cache:/var/www/bootstrap/cache
+      - ./data/storage:/var/www/storage
     restart: unless-stopped
 
   db:
+    container_name: card-system-db
     image: mysql:5.7
     environment:
       MYSQL_DATABASE: ${DB_DATABASE}
@@ -56,7 +58,7 @@ services:
       MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     volumes:
-      - db_data:/var/lib/mysql
+      - ./data/mysql:/var/lib/mysql
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
       interval: 10s
@@ -65,19 +67,14 @@ services:
     restart: unless-stopped
 
   redis:
+    container_name: card-system-redis
     image: redis:7-alpine
     command: redis-server --appendonly yes
     volumes:
-      - redis_data:/data
+      - ./data/redis:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 12
     restart: unless-stopped
-
-volumes:
-  app_storage:
-  app_cache:
-  db_data:
-  redis_data:

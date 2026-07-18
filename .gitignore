@@ -11,6 +11,7 @@ npm-debug.log
 yarn-error.log
 /.env
 /.env.docker
+/data
 /database/seeds/MyPayTableSeeder.php
 /public/.htaccess
 /public/web.config

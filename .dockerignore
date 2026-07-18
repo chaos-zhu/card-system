@@ -7,3 +7,4 @@ node_modules
 vendor
 storage/logs
 bootstrap/cache/*.php
+data

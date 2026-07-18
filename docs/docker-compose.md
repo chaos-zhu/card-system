@@ -4,21 +4,30 @@
 
 ## 首次部署
 
-1. 复制环境变量模板：
+1. 从 GitHub 下载环境变量模板并保存为 `.env`：
 
    ```sh
-   cp .env.docker.example .env
+   curl -fsSL https://raw.githubusercontent.com/chaos-zhu/card-system/master/.env.docker.example -o .env
    ```
 
    修改 `.env` 中的数据库密码、公开的 `https://` 站点地址，并将反向代理的 IP 或 CIDR 写入 `TRUSTED_PROXIES`。不要继续使用模板中的示例密码。
 
-2. 拉取已发布的应用镜像：
+2. 创建本地持久化目录，并确保 PHP 容器能够写入应用存储目录：
+
+   ```sh
+   mkdir -p data/storage/app/public data/storage/framework/cache data/storage/framework/sessions data/storage/framework/views data/storage/logs data/mysql data/redis
+   sudo chown -R 33:33 data/storage
+   ```
+
+   MySQL、Redis 和 Laravel 文件均保存在当前目录的 `data/` 下，便于直接迁移和备份。Linux 中 PHP 容器使用 UID/GID `33:33`；如果部署环境使用其他权限映射，请相应调整 `data/storage` 的所有者。
+
+3. 拉取已发布的应用镜像：
 
    ```sh
    docker compose pull
    ```
 
-3. 使用应用镜像生成随机 `APP_KEY`。该命令不启动 Laravel，也不依赖数据库：
+4. 使用应用镜像生成随机 `APP_KEY`。该命令不启动 Laravel，也不依赖数据库：
 
    ```sh
    docker compose run --rm --no-deps app php -r "echo 'base64:'.base64_encode(random_bytes(32)).PHP_EOL;"
@@ -32,21 +41,21 @@
 
    `APP_KEY` 用于加密应用数据，部署后不得随意更换，也不要提交到 Git 仓库。
 
-4. 启动数据库和 Redis，等待健康检查通过：
+5. 启动数据库和 Redis，等待健康检查通过：
 
    ```sh
    docker compose up -d db redis
    docker compose ps
    ```
 
-5. 初始化新数据库，然后启动全部服务：
+6. 初始化新数据库，然后启动全部服务：
 
    ```sh
    docker compose run --rm app php artisan migrate --seed --force
    docker compose up -d
    ```
 
-6. 登录后台，在系统设置中配置与 `.env` 一致的公开 HTTPS 域名。支付同步返回地址和异步通知地址必须使用该公网域名。
+7. 登录后台，在系统设置中配置与 `.env` 一致的公开 HTTPS 域名。支付同步返回地址和异步通知地址必须使用该公网域名。
 
 ## 外部反向代理
 
@@ -88,7 +97,7 @@ IMAGE_TAG=sha-完整提交SHA
 
 然后执行 `docker compose pull` 和 `docker compose up -d`。
 
-MySQL、Redis、Laravel 上传文件和日志使用命名卷持久化。升级前应备份 `db_data` 和 `app_storage`。生产环境不要执行 `docker compose down -v`，该命令会删除持久化数据。
+MySQL、Redis、Laravel 上传文件和日志分别保存在 `./data/mysql`、`./data/redis` 和 `./data/storage`。迁移或升级前，可停止服务后直接备份整个 `data/` 目录；恢复时保持原目录结构和文件权限。不要在数据库仍在写入时直接复制 MySQL 数据目录，生产环境应优先使用 `mysqldump` 创建一致性备份。
 
 ## API 发货数据库
 
