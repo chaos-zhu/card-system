@@ -45,3 +45,7 @@
 ## 常见问题
 
 请移步：[完整常见问题列表](https://github.com/Tai7sy/card-system/wiki/5.-%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98)
+
+## Docker Compose 部署
+
+可使用 Docker Compose 部署 PHP、Nginx、MySQL、Redis、队列与定时任务。HTTPS 由外部反向代理提供，详细步骤见 [docs/docker-compose.md](docs/docker-compose.md)。

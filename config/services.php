@@ -2,6 +2,14 @@
 
 return [
 
+    'api_card_db' => [
+        'host' => env('API_CARD_DB_HOST'),
+        'port' => env('API_CARD_DB_PORT', 3306),
+        'database' => env('API_CARD_DB_DATABASE'),
+        'username' => env('API_CARD_DB_USERNAME'),
+        'password' => env('API_CARD_DB_PASSWORD'),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Third Party Services

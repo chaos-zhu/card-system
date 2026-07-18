@@ -1,0 +1,9 @@
+.env
+.env.docker
+.git
+.idea
+.vscode
+node_modules
+vendor
+storage/logs
+bootstrap/cache/*.php
